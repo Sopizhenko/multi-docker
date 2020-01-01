@@ -1,0 +1,22 @@
+sudo: required
+services: 
+    - docker
+
+before_install:
+    - docker build -t sopizhenko/react-test  -f ./client/Dockerfile.dev ./client
+    
+script:
+    - docker run -e CI=true sopizhenko/react-test npm test
+
+after_success:
+    - docker build -t sopizhenko/multi-client ./client
+    - docker build -t sopizhenko/multi-nginx ./nginx
+    - docker build -t sopizhenko/multi-server ./server
+    - docker build -t sopizhenko/multi-worker ./worker
+    # Log in to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take images and push it to Docker Hub
+    - docker push sopizhenko/multi_client
+    - docker push sopizhenko/multi_nginx
+    - docker push sopizhenko/multi_server
+    - docker push sopizhenko/multi_worker    
